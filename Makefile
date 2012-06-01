@@ -21,6 +21,7 @@ CFLAGS += -I.
 LDFLAGS += -L. -lopts -lm
 
 TARGETS  = libopts.a
+TARGETS += test
 OBJS  = opts.o
 
 
@@ -29,6 +30,10 @@ all: $(TARGETS)
 libopts.a: $(OBJS)
 	ar cr $@ $(OBJS)
 	ranlib $@
+
+test: test.c libopts.a
+	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)
+	@if ! $(SH) unittest.sh; then echo "Unit test FAILED."; exit -1; fi
 
 %.o: %.c %.h
 	$(CC) $(CFLAGS) -c -o $@ $<

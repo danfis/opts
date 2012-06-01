@@ -15,6 +15,7 @@
 ##
 
 CC ?= gcc
+SH ?= sh
 M4 ?= m4
 SED ?= sed
 FLEX ?= flex
