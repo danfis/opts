@@ -15,10 +15,9 @@
  */
 
 #include <string.h>
-#include <fermat/opts.h>
-#include <fermat/parse.h>
-#include <fermat/dbg.h>
-#include <fermat/alloc.h>
+#include "opts.h"
+#include "alloc.h"
+#include "parse.h"
 
 struct _fer_opt_t {
     const char *long_name; /*!< Long name of option. NULL means no long
@@ -60,10 +59,14 @@ int ferOptsAdd(const char *long_name, char short_name,
 
     opts_len += 1;
     opts = FER_REALLOC_ARR(opts, fer_opt_t *, opts_len);
-
+    if (!opts)
+        return -1;
 
     i = opts_len - 1;
     opts[i] = FER_ALLOC(fer_opt_t);
+    if (!opts[i])
+        return -1;
+
     opts[i]->long_name  = long_name;
     opts[i]->short_name = short_name;
     opts[i]->type       = type;
@@ -92,6 +95,9 @@ int ferOptsAddDesc(const char *long_name, char short_name,
     if (desc){
         desclen = strlen(desc);
         opt->desc = FER_ALLOC_ARR(char, desclen + 1);
+        if (!opt->desc)
+            return -1;
+
         strcpy(opt->desc, desc);
     }
 
@@ -267,32 +273,41 @@ static int optArgSizeT(fer_opt_t *opt, const char *arg)
     _optArgLong(opt, arg, size_t);
 }
 
-static int optArgReal(fer_opt_t *opt, const char *arg)
+#define _optArgDouble(opt, arg, type) \
+    void (*cb)(const char *, char, type); \
+    double val; \
+    \
+    if (ferParseDouble(arg, strend(arg), &val, NULL) != 0){ \
+        if (opt->long_name){ \
+            fprintf(stderr, "Invalid argument of --%s option.\n", opt->long_name); \
+        }else{ \
+            fprintf(stderr, "Invalid argument of -%c option.\n", opt->short_name); \
+        } \
+        return -1; \
+    } \
+    \
+    if (opt->set){ \
+        *(type *)opt->set = val; \
+    } \
+    \
+    if (opt->callback){ \
+        cb = (void (*)(const char *, char, type))opt->callback; \
+        cb(opt->long_name, opt->short_name, val); \
+    } \
+    \
+    return 0
+
+static int optArgFloat(fer_opt_t *opt, const char *arg)
 {
-    void (*cb)(const char *, char, fer_real_t);
-    fer_real_t val;
-
-    if (ferParseReal(arg, strend(arg), &val, NULL) != 0){
-        if (opt->long_name){
-            fprintf(stderr, "Invalid argument of --%s option.\n", opt->long_name);
-        }else{
-            fprintf(stderr, "Invalid argument of -%c option.\n", opt->short_name);
-        }
-        return -1;
-    }
-
-    if (opt->set){
-        *(fer_real_t *)opt->set = val;
-    }
-
-    if (opt->callback){
-        cb = (void (*)(const char *, char, fer_real_t))opt->callback;
-        cb(opt->long_name, opt->short_name, val);
-    }
-
-    return 0;
+    _optArgDouble(opt, arg, float);
 }
 
+static int optArgDouble(fer_opt_t *opt, const char *arg)
+{
+    _optArgDouble(opt, arg, double);
+}
+
+#if 0
 static int optArgV2(fer_opt_t *opt, const char *arg)
 {
     void (*cb)(const char *, char, const fer_vec2_t *);
@@ -338,6 +353,7 @@ optArgV2_err:
     }
     return -1;
 }
+#endif
 
 static int optArgStr(fer_opt_t *opt, const char *arg)
 {
@@ -362,14 +378,16 @@ static int optArg(fer_opt_t *opt, const char *arg)
             return optArgLong(opt, arg);
         case FER_OPTS_INT:
             return optArgInt(opt, arg);
-        case FER_OPTS_REAL:
-            return optArgReal(opt, arg);
+        case FER_OPTS_FLOAT:
+            return optArgFloat(opt, arg);
+        case FER_OPTS_DOUBLE:
+            return optArgDouble(opt, arg);
         case FER_OPTS_STR:
             return optArgStr(opt, arg);
         case FER_OPTS_SIZE_T:
             return optArgSizeT(opt, arg);
-        case FER_OPTS_V2:
-            return optArgV2(opt, arg);
+        //case FER_OPTS_V2:
+        //    return optArgV2(opt, arg);
         default:
             return -1;
     }
@@ -436,26 +454,29 @@ static void printType(fer_opt_t *opt, FILE *out)
 {
     switch(opt->type){
         case FER_OPTS_NONE:
-            fprintf(out, "    ");
+            fprintf(out, "      ");
             break;
         case FER_OPTS_LONG:
-            fprintf(out, "long");
+            fprintf(out, "int   ");
             break;
         case FER_OPTS_INT:
-            fprintf(out, "int ");
+            fprintf(out, "int   ");
             break;
-        case FER_OPTS_REAL:
-            fprintf(out, "flt ");
+        case FER_OPTS_FLOAT:
+            fprintf(out, "float ");
+            break;
+        case FER_OPTS_DOUBLE:
+            fprintf(out, "float ");
             break;
         case FER_OPTS_STR:
-            fprintf(out, "str ");
+            fprintf(out, "str   ");
             break;
         case FER_OPTS_SIZE_T:
-            fprintf(out, "uint");
+            fprintf(out, "uint  ");
             break;
-        case FER_OPTS_V2:
-            fprintf(out, "vec2");
-            break;
+        //case FER_OPTS_V2:
+        //    fprintf(out, "vec2  ");
+        //    break;
     }
 }
 

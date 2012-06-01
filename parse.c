@@ -14,19 +14,19 @@
  *  See the License for more information.
  */
 
-#include "fermat/parse.h"
-#include "fermat/dbg.h"
+#include <math.h>
+#include "parse.h"
 
 #define NOT_WS(c) \
     ( c != ' ' && c != '\t' && c != '\n')
 
 /* Implementation taken from SVT project. */
-int ferParseReal(const char *str, const char *strend, fer_real_t *val, char **next)
+int ferParseDouble(const char *str, const char *strend, double *val, char **next)
 {
     char c;
-    fer_real_t fract;
-    fer_real_t mult;
-    fer_real_t num;
+    double fract;
+    double mult;
+    double num;
     int negative = 0;
     int has_e;
 
@@ -38,7 +38,7 @@ int ferParseReal(const char *str, const char *strend, fer_real_t *val, char **ne
         ++str;
 
     c = *str;
-    *val = FER_ZERO;
+    *val = 0.;
 
     /* process sign */
     if (c == '-'){
@@ -57,7 +57,7 @@ int ferParseReal(const char *str, const char *strend, fer_real_t *val, char **ne
         if (c < 48 || c > 57)
             return -1;
 
-        *val = *val * FER_REAL(10.) + (c - 48);
+        *val = *val * 10. + (c - 48);
         c = *++str;
     }
 
@@ -70,8 +70,8 @@ int ferParseReal(const char *str, const char *strend, fer_real_t *val, char **ne
     /* process decimal part */
     if (c == '.'){
         c = *++str;
-        mult = FER_REAL(0.1);
-        fract = FER_ZERO;
+        mult = 0.1;
+        fract = 0.;
         while (c != 0 && NOT_WS(c) && str < strend){
             /* skip to next part */
             if (c == 'e' || c == 'E')
@@ -82,7 +82,7 @@ int ferParseReal(const char *str, const char *strend, fer_real_t *val, char **ne
                 return -1;
 
             fract = fract + mult * (c - 48);
-            mult *= FER_REAL(0.1);
+            mult *= 0.1;
             c = *++str;
         }
         *val += fract;
@@ -90,7 +90,7 @@ int ferParseReal(const char *str, const char *strend, fer_real_t *val, char **ne
 
     /* apply negative flag */
     if (negative)
-        *val = *val * FER_REAL(-1.);
+        *val = *val * -1.;
 
     if (!NOT_WS(c) || str >= strend){
         if (next)
@@ -103,7 +103,7 @@ int ferParseReal(const char *str, const char *strend, fer_real_t *val, char **ne
     if (c == 'e' || c == 'E'){
         c = *++str;
         negative = 0;
-        num = FER_ZERO;
+        num = 0.;
 
         if (c == '-'){
             negative = 1;
@@ -115,16 +115,16 @@ int ferParseReal(const char *str, const char *strend, fer_real_t *val, char **ne
             if (c < 48 || c > 57)
                 return -1;
 
-            num = num * FER_REAL(10.) + (c - 48);
+            num = num * 10. + (c - 48);
             c = *++str;
             has_e = 1;
         }
 
         if (negative)
-            num *= FER_REAL(-1.);
+            num *= -1.;
 
         if (has_e){
-            mult = FER_POW(FER_REAL(10.), num);
+            mult = pow(10., num);
             *val *= mult;
         }
     }
@@ -136,6 +136,7 @@ int ferParseReal(const char *str, const char *strend, fer_real_t *val, char **ne
 }
 
 
+#if 0
 int ferParseVec3(const char *_str, const char *strend, fer_vec3_t *vec, char **n)
 {
     fer_real_t v[3];
@@ -204,6 +205,7 @@ int ferParseVec4(const char *_str, const char *strend, fer_vec4_t *vec, char **n
 
     return 0;
 }
+#endif
 
 int ferParseLong(const char *str, const char *strend, long *val, char **next)
 {

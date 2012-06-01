@@ -17,10 +17,6 @@
 #ifndef __FER_PARSE_H__
 #define __FER_PARSE_H__
 
-#include <fermat/vec2.h>
-#include <fermat/vec3.h>
-#include <fermat/vec4.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
@@ -36,8 +32,9 @@ extern "C" {
  * pointer to string after parsed number.
  * Returns 0 on success, -1 otherwise.
  */
-int ferParseReal(const char *str, const char *strend, fer_real_t *val, char **next);
+int ferParseDouble(const char *str, const char *strend, double *val, char **next);
 
+#if 0
 /**
  * Parses given string that starts at str and ends at strend (exclusively)
  * into given vector and if next is not NULL stores there pointer after
@@ -56,6 +53,7 @@ int ferParseVec2(const char *str, const char *strend, fer_vec2_t *v, char **next
  * Similar function to ferParseVec3() but parses 4D vectors.
  */
 int ferParseVec4(const char *str, const char *strend, fer_vec4_t *v, char **next);
+#endif
 
 /**
  * Parses given string that starts at str ands ends at strend (exclusively)

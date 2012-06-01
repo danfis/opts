@@ -1,9 +1,9 @@
 /***
- * fermat
- * -------
- * Copyright (c)2011 Daniel Fiser <danfis@danfis.cz>
+ * opts
+ * -----
+ * Copyright (c)2011-2012 Daniel Fiser <danfis@danfis.cz>
  *
- *  This file is part of fermat.
+ *  This file is part of opts.
  *
  *  Distributed under the OSI-approved BSD License (the "License");
  *  see accompanying file BDS-LICENSE for details or see
@@ -18,7 +18,7 @@
 #define __FER_OPTS_H__
 
 #include <stdio.h>
-#include <fermat/core.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -45,12 +45,12 @@ extern "C" {
  *
  * int main(int argc, char *argv[])
  * {
- *     fer_real_t opt1;
+ *     float opt1;
  *     int help;
  *     int i;
  *
  *     // define options
- *     ferOptsAdd("opt1", 'o', FER_OPTS_REAL, (void *)&opt1, NULL);
+ *     ferOptsAdd("opt1", 'o', FER_OPTS_FLOAT, (void *)&opt1, NULL);
  *     ferOptsAdd("help", 'h', FER_OPTS_NONE, (void *)&help, FER_OPTS_CB(helpcb));
  *
  *     // parse options
@@ -117,32 +117,41 @@ extern "C" {
 #define FER_OPTS_INT 0x02
 
 /**
- * Real.
- *     1. .set - [fer_real_t *]
- *     2. .callback - void (*)(const char *long_name, char short_name, fer_real_t val)
+ * Float.
+ *     1. .set - [float *]
+ *     2. .callback - void (*)(const char *long_name, char short_name, float val)
  */
-#define FER_OPTS_REAL 0x03
+#define FER_OPTS_FLOAT 0x03
+
+/**
+ * Double.
+ *     1. .set - [double *]
+ *     2. .callback - void (*)(const char *long_name, char short_name, double val)
+ */
+#define FER_OPTS_DOUBLE 0x04
 
 /**
  * String.
  *     1. .set - [const char **]
  *     2. .callback - void (*)(const char *long_name, char short_name, const char *)
  */
-#define FER_OPTS_STR 0x04
+#define FER_OPTS_STR 0x05
 
 /**
  * size_t.
  *     1. .set - [size_t *]
  *     2. .callback - void (*)(const char *long_name, char short_name, size_t)
  */
-#define FER_OPTS_SIZE_T 0x05
+#define FER_OPTS_SIZE_T 0x06
 
+#if 0
 /**
  * 2-D vector.
  *     1. .set - [fer_vec2_t *]
  *     2. .callback - void (*)(const char *long_name, char short_name, const fer_vec2_t *)
  */
-#define FER_OPTS_V2 0x06
+#define FER_OPTS_V2 0x08
+#endif
 
 /** ^^^^ */
 
@@ -169,7 +178,7 @@ extern "C" {
  * Returns ID of the added option.
  */
 int ferOptsAdd(const char *long_name, char short_name,
-                uint32_t type, void *set, void (*callback)(void));
+               uint32_t type, void *set, void (*callback)(void));
 
 /**
  * Same as {ferOptsAdd()} but has additional parameter {desc} where can be
