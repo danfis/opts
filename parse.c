@@ -1,9 +1,9 @@
 /***
- * fermat
- * -------
- * Copyright (c)2010 Daniel Fiser <danfis@danfis.cz>
+ * opts
+ * -----
+ * Copyright (c)2012 Daniel Fiser <danfis@danfis.cz>
  *
- *  This file is part of fermat.
+ *  This file is part of opts.
  *
  *  Distributed under the OSI-approved BSD License (the "License");
  *  see accompanying file BDS-LICENSE for details or see
@@ -15,13 +15,12 @@
  */
 
 #include <math.h>
-#include "parse.h"
 
 #define NOT_WS(c) \
     ( c != ' ' && c != '\t' && c != '\n')
 
 /* Implementation taken from SVT project. */
-int ferParseDouble(const char *str, const char *strend, double *val, char **next)
+static int parseDouble(const char *str, const char *strend, double *val, char **next)
 {
     char c;
     double fract;
@@ -207,7 +206,7 @@ int ferParseVec4(const char *_str, const char *strend, fer_vec4_t *vec, char **n
 }
 #endif
 
-int ferParseLong(const char *str, const char *strend, long *val, char **next)
+static int parseLong(const char *str, const char *strend, long *val, char **next)
 {
     char c;
     int negative = 0;

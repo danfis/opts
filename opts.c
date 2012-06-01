@@ -1,9 +1,9 @@
 /***
- * fermat
- * -------
- * Copyright (c)2011 Daniel Fiser <danfis@danfis.cz>
+ * opts
+ * -----
+ * Copyright (c)2011-2012 Daniel Fiser <danfis@danfis.cz>
  *
- *  This file is part of fermat.
+ *  This file is part of opts.
  *
  *  Distributed under the OSI-approved BSD License (the "License");
  *  see accompanying file BDS-LICENSE for details or see
@@ -17,9 +17,10 @@
 #include <string.h>
 #include "opts.h"
 #include "alloc.h"
-#include "parse.h"
 
-struct _fer_opt_t {
+#include "parse.c"
+
+struct _opt_t {
     const char *long_name; /*!< Long name of option. NULL means no long
                                 name. */
     char short_name;       /*!< Short, one letter long, name of option. 0x0
@@ -33,24 +34,24 @@ struct _fer_opt_t {
                                 on the {.type} */
     char *desc;            /*!< Description of the option */
 };
-typedef struct _fer_opt_t fer_opt_t;
+typedef struct _opt_t opt_t;
 
-static fer_opt_t **opts = NULL;
+static opt_t **opts_arr = NULL;
 static size_t opts_len = 0;
 
 
-static fer_opt_t *findOpt(char *arg);
-static fer_opt_t *findOptLong(char *arg);
-static fer_opt_t *findOptShort(char arg);
+static opt_t *findOpt(char *arg);
+static opt_t *findOptLong(char *arg);
+static opt_t *findOptShort(char arg);
 
-static void optNoArg(fer_opt_t *opt);
-static int optArg(fer_opt_t *opt, const char *arg);
-static void invalidOptErr(const fer_opt_t *opt);
+static void optNoArg(opt_t *opt);
+static int optArg(opt_t *opt, const char *arg);
+static void invalidOptErr(const opt_t *opt);
 
 static const char *strend(const char *str);
 
-int ferOptsAdd(const char *long_name, char short_name,
-               uint32_t type, void *set, void (*callback)(void))
+int optsAdd(const char *long_name, char short_name,
+            uint32_t type, void *set, void (*callback)(void))
 {
     size_t i;
 
@@ -58,43 +59,43 @@ int ferOptsAdd(const char *long_name, char short_name,
         return -1;
 
     opts_len += 1;
-    opts = FER_REALLOC_ARR(opts, fer_opt_t *, opts_len);
-    if (!opts)
+    opts_arr = REALLOC_ARR(opts_arr, opt_t *, opts_len);
+    if (!opts_arr)
         return -1;
 
     i = opts_len - 1;
-    opts[i] = FER_ALLOC(fer_opt_t);
-    if (!opts[i])
+    opts_arr[i] = ALLOC(opt_t);
+    if (!opts_arr[i])
         return -1;
 
-    opts[i]->long_name  = long_name;
-    opts[i]->short_name = short_name;
-    opts[i]->type       = type;
-    opts[i]->set        = set;
-    opts[i]->callback   = callback;
-    opts[i]->desc       = NULL;
+    opts_arr[i]->long_name  = long_name;
+    opts_arr[i]->short_name = short_name;
+    opts_arr[i]->type       = type;
+    opts_arr[i]->set        = set;
+    opts_arr[i]->callback   = callback;
+    opts_arr[i]->desc       = NULL;
 
-    if (opts[i]->type == FER_OPTS_NONE && opts[i]->set)
-        *(int *)opts[i]->set = 0;
+    if (opts_arr[i]->type == OPTS_NONE && opts_arr[i]->set)
+        *(int *)opts_arr[i]->set = 0;
 
     return i;
 }
 
-int ferOptsAddDesc(const char *long_name, char short_name,
-                   uint32_t type, void *set, void (*callback)(void),
-                   const char *desc)
+int optsAddDesc(const char *long_name, char short_name,
+                uint32_t type, void *set, void (*callback)(void),
+                const char *desc)
 {
     size_t id, desclen;
-    fer_opt_t *opt;
+    opt_t *opt;
    
-    id = ferOptsAdd(long_name, short_name, type, set, callback);
+    id = optsAdd(long_name, short_name, type, set, callback);
     if (id < 0)
         return -1;
 
-    opt = opts[id];
+    opt = opts_arr[id];
     if (desc){
         desclen = strlen(desc);
-        opt->desc = FER_ALLOC_ARR(char, desclen + 1);
+        opt->desc = ALLOC_ARR(char, desclen + 1);
         if (!opt->desc)
             return -1;
 
@@ -104,23 +105,23 @@ int ferOptsAddDesc(const char *long_name, char short_name,
     return id;
 }
 
-void ferOptsClear(void)
+void optsClear(void)
 {
     size_t i;
 
     for (i = 0; i < opts_len; i++){
-        if (opts[i]->desc)
-            FER_FREE(opts[i]->desc);
-        FER_FREE(opts[i]);
+        if (opts_arr[i]->desc)
+            FREE(opts_arr[i]->desc);
+        FREE(opts_arr[i]);
     }
-    FER_FREE(opts);
-    opts = NULL;
+    FREE(opts_arr);
+    opts_arr = NULL;
     opts_len = 0;
 }
 
-int ferOpts(int *argc, char **argv)
+int opts(int *argc, char **argv)
 {
-    fer_opt_t *opt;
+    opt_t *opt;
     int args_remaining;
     int i, ok = 0;
    
@@ -134,7 +135,7 @@ int ferOpts(int *argc, char **argv)
 
         if (opt){
             // found corresponding option
-            if (opt->type == FER_OPTS_NONE){
+            if (opt->type == OPTS_NONE){
                 // option has no argument
                 optNoArg(opt);
             }else{
@@ -159,10 +160,10 @@ int ferOpts(int *argc, char **argv)
     return ok;
 }
 
-static fer_opt_t *findOpt(char *_arg)
+static opt_t *findOpt(char *_arg)
 {
     char *arg = _arg;
-    fer_opt_t *opt;
+    opt_t *opt;
 
     if (arg[0] == '-'){
         if (arg[1] == '-'){
@@ -175,7 +176,7 @@ static fer_opt_t *findOpt(char *_arg)
                 opt = findOptShort(*arg);
                 if (arg[1] == 0x0){
                     return opt;
-                }else if (opt->type == FER_OPTS_NONE){
+                }else if (opt->type == OPTS_NONE){
                     optNoArg(opt);
                 }else{
                     fprintf(stderr, "Invalid option %s.\n", _arg);
@@ -189,33 +190,33 @@ static fer_opt_t *findOpt(char *_arg)
     return NULL;
 }
 
-static fer_opt_t *findOptLong(char *arg)
+static opt_t *findOptLong(char *arg)
 {
     size_t i;
 
     for (i = 0; i < opts_len; i++){
-        if (opts[i]->long_name && strcmp(opts[i]->long_name, arg) == 0){
-            return opts[i];
+        if (opts_arr[i]->long_name && strcmp(opts_arr[i]->long_name, arg) == 0){
+            return opts_arr[i];
         }
     }
 
     return NULL;
 }
 
-static fer_opt_t *findOptShort(char arg)
+static opt_t *findOptShort(char arg)
 {
     size_t i;
 
     for (i = 0; i < opts_len; i++){
-        if (arg == opts[i]->short_name){
-            return opts[i];
+        if (arg == opts_arr[i]->short_name){
+            return opts_arr[i];
         }
     }
 
     return NULL;
 }
 
-static void optNoArg(fer_opt_t *opt)
+static void optNoArg(opt_t *opt)
 {
     void (*cb)(const char *, char);
 
@@ -229,7 +230,7 @@ static void optNoArg(fer_opt_t *opt)
     }
 }
 
-static void invalidOptErr(const fer_opt_t *opt)
+static void invalidOptErr(const opt_t *opt)
 {
     if (opt->long_name){
         fprintf(stderr, "Invalid argument of --%s option.\n", (opt)->long_name);
@@ -242,7 +243,7 @@ static void invalidOptErr(const fer_opt_t *opt)
     void (*cb)(const char *, char, type); \
     long val; \
     \
-    if (ferParseLong((arg), strend(arg), &val, NULL) != 0){ \
+    if (parseLong((arg), strend(arg), &val, NULL) != 0){ \
         invalidOptErr(opt); \
         return -1; \
     } \
@@ -258,17 +259,17 @@ static void invalidOptErr(const fer_opt_t *opt)
     \
     return 0
 
-static int optArgLong(fer_opt_t *opt, const char *arg)
+static int optArgLong(opt_t *opt, const char *arg)
 {
     _optArgLong(opt, arg, long);
 }
 
-static int optArgInt(fer_opt_t *opt, const char *arg)
+static int optArgInt(opt_t *opt, const char *arg)
 {
     _optArgLong(opt, arg, int);
 }
 
-static int optArgSizeT(fer_opt_t *opt, const char *arg)
+static int optArgSizeT(opt_t *opt, const char *arg)
 {
     _optArgLong(opt, arg, size_t);
 }
@@ -277,7 +278,7 @@ static int optArgSizeT(fer_opt_t *opt, const char *arg)
     void (*cb)(const char *, char, type); \
     double val; \
     \
-    if (ferParseDouble(arg, strend(arg), &val, NULL) != 0){ \
+    if (parseDouble(arg, strend(arg), &val, NULL) != 0){ \
         if (opt->long_name){ \
             fprintf(stderr, "Invalid argument of --%s option.\n", opt->long_name); \
         }else{ \
@@ -297,18 +298,18 @@ static int optArgSizeT(fer_opt_t *opt, const char *arg)
     \
     return 0
 
-static int optArgFloat(fer_opt_t *opt, const char *arg)
+static int optArgFloat(opt_t *opt, const char *arg)
 {
     _optArgDouble(opt, arg, float);
 }
 
-static int optArgDouble(fer_opt_t *opt, const char *arg)
+static int optArgDouble(opt_t *opt, const char *arg)
 {
     _optArgDouble(opt, arg, double);
 }
 
 #if 0
-static int optArgV2(fer_opt_t *opt, const char *arg)
+static int optArgV2(opt_t *opt, const char *arg)
 {
     void (*cb)(const char *, char, const fer_vec2_t *);
     fer_real_t val;
@@ -323,13 +324,13 @@ static int optArgV2(fer_opt_t *opt, const char *arg)
         goto optArgV2_err;
     }
 
-    if (ferParseReal(arg, arg2, &val, NULL) != 0){
+    if (parseReal(arg, arg2, &val, NULL) != 0){
         goto optArgV2_err;
     }
     ferVec2SetX(&v2, val);
 
     ++arg2;
-    if (ferParseReal(arg2, strend(arg2), &val, NULL) != 0){
+    if (parseReal(arg2, strend(arg2), &val, NULL) != 0){
         goto optArgV2_err;
     }
     ferVec2SetY(&v2, val);
@@ -355,7 +356,7 @@ optArgV2_err:
 }
 #endif
 
-static int optArgStr(fer_opt_t *opt, const char *arg)
+static int optArgStr(opt_t *opt, const char *arg)
 {
     void (*cb)(const char *, char, const char *);
 
@@ -371,20 +372,20 @@ static int optArgStr(fer_opt_t *opt, const char *arg)
     return 0;
 }
 
-static int optArg(fer_opt_t *opt, const char *arg)
+static int optArg(opt_t *opt, const char *arg)
 {
     switch(opt->type){
-        case FER_OPTS_LONG:
+        case OPTS_LONG:
             return optArgLong(opt, arg);
-        case FER_OPTS_INT:
+        case OPTS_INT:
             return optArgInt(opt, arg);
-        case FER_OPTS_FLOAT:
+        case OPTS_FLOAT:
             return optArgFloat(opt, arg);
-        case FER_OPTS_DOUBLE:
+        case OPTS_DOUBLE:
             return optArgDouble(opt, arg);
-        case FER_OPTS_STR:
+        case OPTS_STR:
             return optArgStr(opt, arg);
-        case FER_OPTS_SIZE_T:
+        case OPTS_SIZE_T:
             return optArgSizeT(opt, arg);
         //case FER_OPTS_V2:
         //    return optArgV2(opt, arg);
@@ -412,14 +413,14 @@ static size_t optsNameLen(void)
     name_len = 0;
     for (i = 0; i < opts_len; i++){
         len = 0;
-        if (opts[i]->long_name && opts[i]->short_name){
+        if (opts_arr[i]->long_name && opts_arr[i]->short_name){
             // e.g., "-h / --help"
             len = 7; // "-h / --"
-            len += strlen(opts[i]->long_name);
-        }else if (opts[i]->long_name){
+            len += strlen(opts_arr[i]->long_name);
+        }else if (opts_arr[i]->long_name){
             // e.g., --help
-            len = 2 + strlen(opts[i]->long_name);
-        }else if (opts[i]->short_name){
+            len = 2 + strlen(opts_arr[i]->long_name);
+        }else if (opts_arr[i]->short_name){
             // e.g., -h
             len = 2;
         }
@@ -431,7 +432,7 @@ static size_t optsNameLen(void)
     return name_len;
 }
 
-static void printName(fer_opt_t *opt, size_t len, FILE *out)
+static void printName(opt_t *opt, size_t len, FILE *out)
 {
     size_t l = 0;
 
@@ -450,28 +451,28 @@ static void printName(fer_opt_t *opt, size_t len, FILE *out)
     }
 }
 
-static void printType(fer_opt_t *opt, FILE *out)
+static void printType(opt_t *opt, FILE *out)
 {
     switch(opt->type){
-        case FER_OPTS_NONE:
+        case OPTS_NONE:
             fprintf(out, "      ");
             break;
-        case FER_OPTS_LONG:
+        case OPTS_LONG:
             fprintf(out, "int   ");
             break;
-        case FER_OPTS_INT:
+        case OPTS_INT:
             fprintf(out, "int   ");
             break;
-        case FER_OPTS_FLOAT:
+        case OPTS_FLOAT:
             fprintf(out, "float ");
             break;
-        case FER_OPTS_DOUBLE:
+        case OPTS_DOUBLE:
             fprintf(out, "float ");
             break;
-        case FER_OPTS_STR:
+        case OPTS_STR:
             fprintf(out, "str   ");
             break;
-        case FER_OPTS_SIZE_T:
+        case OPTS_SIZE_T:
             fprintf(out, "uint  ");
             break;
         //case FER_OPTS_V2:
@@ -480,7 +481,7 @@ static void printType(fer_opt_t *opt, FILE *out)
     }
 }
 
-static void printDesc(fer_opt_t *opt, FILE *out)
+static void printDesc(opt_t *opt, FILE *out)
 {
     if (!opt->desc)
         return;
@@ -488,7 +489,7 @@ static void printDesc(fer_opt_t *opt, FILE *out)
     fprintf(out, opt->desc);
 }
 
-void ferOptsPrint(FILE *out, const char *lineprefix)
+void optsPrint(FILE *out, const char *lineprefix)
 {
     size_t i;
     size_t name_len;
@@ -501,15 +502,15 @@ void ferOptsPrint(FILE *out, const char *lineprefix)
         fprintf(out, "%s", lineprefix);
 
         // then print name
-        printName(opts[i], name_len, out);
+        printName(opts_arr[i], name_len, out);
         fprintf(out, "  ");
 
         // print type
-        printType(opts[i], out);
+        printType(opts_arr[i], out);
         fprintf(out, "  ");
 
         // print description
-        printDesc(opts[i], out);
+        printDesc(opts_arr[i], out);
 
         fprintf(out, "\n");
     }

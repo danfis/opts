@@ -1,9 +1,9 @@
 /***
- * fermat
- * -------
- * Copyright (c)2010 Daniel Fiser <danfis@danfis.cz>
+ * opts
+ * -----
+ * Copyright (c)2012 Daniel Fiser <danfis@danfis.cz>
  *
- *  This file is part of fermat.
+ *  This file is part of opts.
  *
  *  Distributed under the OSI-approved BSD License (the "License");
  *  see accompanying file BDS-LICENSE for details or see
@@ -14,8 +14,8 @@
  *  See the License for more information.
  */
 
-#ifndef __FER_ALLOC_H__
-#define __FER_ALLOC_H__
+#ifndef __ALLOC_H__
+#define __ALLOC_H__
 
 #include <stdlib.h>
 
@@ -31,31 +31,31 @@ extern "C" {
  */
 
 /* Memory allocation: - internal macro */
-#define _FER_ALLOC_MEMORY(type, ptr_old, size) \
+#define _ALLOC_MEMORY(type, ptr_old, size) \
     (type *)realloc((void *)ptr_old, (size))
 
 /**
  * Allocate memory for one element of given type.
  */
-#define FER_ALLOC(type) \
-    _FER_ALLOC_MEMORY(type, NULL, sizeof(type))
+#define ALLOC(type) \
+    _ALLOC_MEMORY(type, NULL, sizeof(type))
 
 /**
  * Allocate array of elements of given type.
  */
-#define FER_ALLOC_ARR(type, num_elements) \
-    _FER_ALLOC_MEMORY(type, NULL, sizeof(type) * (num_elements))
+#define ALLOC_ARR(type, num_elements) \
+    _ALLOC_MEMORY(type, NULL, sizeof(type) * (num_elements))
 
 /**
  * Reallocates array.
  */
-#define FER_REALLOC_ARR(ptr, type, num_elements) \
-    _FER_ALLOC_MEMORY(type, ptr, sizeof(type) * (num_elements))
+#define REALLOC_ARR(ptr, type, num_elements) \
+    _ALLOC_MEMORY(type, ptr, sizeof(type) * (num_elements))
 
-#define FER_FREE(ptr) free(ptr) /*!< Deallocates memory */
+#define FREE(ptr) free(ptr) /*!< Deallocates memory */
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* __cplusplus */
 
-#endif /* __FER_ALLOC_H__ */
+#endif /* __ALLOC_H__ */

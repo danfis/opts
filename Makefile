@@ -22,7 +22,6 @@ LDFLAGS += -L. -lopts -lm
 
 TARGETS  = libopts.a
 OBJS  = opts.o
-OBJS += parse.o
 
 
 all: $(TARGETS)

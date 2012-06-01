@@ -14,8 +14,8 @@
  *  See the License for more information.
  */
 
-#ifndef __FER_OPTS_H__
-#define __FER_OPTS_H__
+#ifndef __OPTS_H__
+#define __OPTS_H__
 
 #include <stdio.h>
 #include <stdint.h>
@@ -35,7 +35,7 @@ extern "C" {
  * --------
  * ~~~~~
  * #include <stdio.h>
- * #include <fermat/opts.h>
+ * #include "opts.h"
  *
  * static void helpcb(const char *l, char s)
  * {
@@ -50,11 +50,11 @@ extern "C" {
  *     int i;
  *
  *     // define options
- *     ferOptsAdd("opt1", 'o', FER_OPTS_FLOAT, (void *)&opt1, NULL);
- *     ferOptsAdd("help", 'h', FER_OPTS_NONE, (void *)&help, FER_OPTS_CB(helpcb));
+ *     optsAdd("opt1", 'o', OPTS_FLOAT, (void *)&opt1, NULL);
+ *     optsAdd("help", 'h', OPTS_NONE, (void *)&help, OPTS_CB(helpcb));
  *
  *     // parse options
- *     ferOpts(&argc, argv);
+ *     opts(&argc, argv);
  *
  *     // print some info
  *     fprintf(stdout, "help: %d\n", help);
@@ -100,49 +100,49 @@ extern "C" {
  *        if it wasn't.
  *     2. .callback must have type void (*)(const char *long_name, char short_name)
  */
-#define FER_OPTS_NONE 0x00
+#define OPTS_NONE 0x00
 
 /**
  * Long type.
  *     1. .set must have type [long *]
  *     2. .callback must have type void (*)(const char *long_name, char short_name, long val)
  */
-#define FER_OPTS_LONG 0x01
+#define OPTS_LONG 0x01
 
 /**
  * Int.
  *     1. .set - [int *]
  *     2. .callback - void (*)(const char *long_name, char short_name, int val)
  */
-#define FER_OPTS_INT 0x02
+#define OPTS_INT 0x02
 
 /**
  * Float.
  *     1. .set - [float *]
  *     2. .callback - void (*)(const char *long_name, char short_name, float val)
  */
-#define FER_OPTS_FLOAT 0x03
+#define OPTS_FLOAT 0x03
 
 /**
  * Double.
  *     1. .set - [double *]
  *     2. .callback - void (*)(const char *long_name, char short_name, double val)
  */
-#define FER_OPTS_DOUBLE 0x04
+#define OPTS_DOUBLE 0x04
 
 /**
  * String.
  *     1. .set - [const char **]
  *     2. .callback - void (*)(const char *long_name, char short_name, const char *)
  */
-#define FER_OPTS_STR 0x05
+#define OPTS_STR 0x05
 
 /**
  * size_t.
  *     1. .set - [size_t *]
  *     2. .callback - void (*)(const char *long_name, char short_name, size_t)
  */
-#define FER_OPTS_SIZE_T 0x06
+#define OPTS_SIZE_T 0x06
 
 #if 0
 /**
@@ -150,7 +150,7 @@ extern "C" {
  *     1. .set - [fer_vec2_t *]
  *     2. .callback - void (*)(const char *long_name, char short_name, const fer_vec2_t *)
  */
-#define FER_OPTS_V2 0x08
+#define OPTS_V2 0x08
 #endif
 
 /** ^^^^ */
@@ -161,9 +161,9 @@ extern "C" {
  */
 
 /**
- * Use this macro for passing callback to ferOptsAdd().
+ * Use this macro for passing callback to optsAdd().
  */
-#define FER_OPTS_CB(func) (void (*)(void))(func)
+#define OPTS_CB(func) (void (*)(void))(func)
  
 /**
  * Adds description of an option:
@@ -177,21 +177,21 @@ extern "C" {
  *
  * Returns ID of the added option.
  */
-int ferOptsAdd(const char *long_name, char short_name,
-               uint32_t type, void *set, void (*callback)(void));
+int optsAdd(const char *long_name, char short_name,
+            uint32_t type, void *set, void (*callback)(void));
 
 /**
- * Same as {ferOptsAdd()} but has additional parameter {desc} where can be
+ * Same as {optsAdd()} but has additional parameter {desc} where can be
  * passed string description of the option
  */
-int ferOptsAddDesc(const char *long_name, char short_name,
-                   uint32_t type, void *set, void (*callback)(void),
-                   const char *desc);
+int optsAddDesc(const char *long_name, char short_name,
+                uint32_t type, void *set, void (*callback)(void),
+                const char *desc);
 
 /**
  * Clears all options previously added
  */
-void ferOptsClear(void);
+void optsClear(void);
 
 /**
  * Parses command line options.
@@ -200,16 +200,16 @@ void ferOptsClear(void);
  * the options that weren't parsed.
  * Returns 0 if all options were successfully parsed.
  */
-int ferOpts(int *argc, char **argv);
+int opts(int *argc, char **argv);
 
 
 /**
  * Print list of all options
  */
-void ferOptsPrint(FILE *out, const char *lineprefix);
+void optsPrint(FILE *out, const char *lineprefix);
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
 
-#endif /* __FER_OPTS_H__ */
+#endif /* __OPTS_H__ */
