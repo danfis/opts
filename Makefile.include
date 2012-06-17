@@ -17,6 +17,8 @@
 CC ?= gcc
 SH ?= sh
 SCAN_BUILD ?= scan-build
+GZIP = gzip
+A2X ?= a2x
 
 CC_NOT_GCC = no
 
@@ -75,5 +77,6 @@ LDFLAGS += $(SYSTEM_LDFLAGS)
 PREFIX     ?= /usr/local
 INCLUDEDIR ?= include
 LIBDIR     ?= lib
+MANDIR     ?= man
 
 .DEFAULT_GOAL := all

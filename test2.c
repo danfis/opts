@@ -43,3 +43,37 @@ int main(int argc, char *argv[])
     return 0;
 }
 
+// If compiled as *test* program the outputs should be:
+// $ ./test
+// > help: 0
+// > opt1: 0.000000
+// > optarr[0]: 0.000000
+// > optarr[1]: 0.000000
+// > optarr[2]: 0.000000
+// > [00]: `./test'
+//
+// $ ./test --opt1 1.1 --opt
+// > help: 0
+// > opt1: 1.100000
+// > optarr[0]: 0.000000
+// > optarr[1]: 0.000000
+// > optarr[2]: 0.000000
+// > [00]: `./test'
+// > [01]: `--opt'
+//
+// $ ./test -o 2.2 -h -a 2,3.1,11
+// > HelpCB: help h
+// > 
+// > help: 1
+// > opt1: 2.200000
+// > optarr[0]: 2.000000
+// > optarr[1]: 3.100000
+// > optarr[2]: 11.000000
+// > [00]: `./test'
+//
+// $ ./test -o 2.2invalid
+// > Invalid argument of -o/--opt1 option.
+// > Usage: ./test2
+// >     -o / --opt1    float     
+// >     -h / --help            
+// >     -a / --optarr  float[]   Array of three ints

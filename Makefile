@@ -46,20 +46,25 @@ opts.c: parse.c optarg.c
 %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-install:
+install: libopts.a doc
 	mkdir -p $(PREFIX)/$(INCLUDEDIR)
 	mkdir -p $(PREFIX)/$(LIBDIR)
+	mkdir -p $(PREFIX)/$(MANDIR)
 	cp -r opts.h $(PREFIX)/$(INCLUDEDIR)
 	cp libopts.a $(PREFIX)/$(LIBDIR)
+	cp *.3.gz $(PREFIX)/$(MANDIR)
 
 clean:
 	rm -f $(OBJS)
 	rm -f $(TARGETS)
+	rm -f *.3 *.3.gz
 	if [ -d testsuites ]; then $(MAKE) -C testsuites clean; fi;
 	if [ -d doc ]; then $(MAKE) -C doc clean; fi;
 
 doc:
-	$(MAKE) -C doc
+	rm -f *.3 *.3.gz
+	a2x -d manpage -f manpage opts.3.txt
+	for file in *.3; do $(GZIP) $$file; done;
 
 analyze: clean
 	$(SCAN_BUILD) $(MAKE)
@@ -73,9 +78,11 @@ help:
 	@echo "    analyze    - Performs static analysis using Clang Static Analyzer"
 	@echo ""
 	@echo "Options:"
-	@echo "    CC         - Path to C compiler          (=$(CC))"
-	@echo "    SH         - Path to sh(1)               (=$(SH))"
-	@echo "    SCAN_BUILD - Path to scan-build          (=$(SCAN_BUILD))"
+	@echo "    CC         - Path to C compiler           (=$(CC))"
+	@echo "    SH         - Path to sh(1)                (=$(SH))"
+	@echo "    SCAN_BUILD - Path to scan-build           (=$(SCAN_BUILD))"
+	@echo "    A2X        - Path to a2x asciidoc program (=$(A2X))"
+	@echo "    GZIP       - Path to gzip(1)				 (=$(GZIP))"
 	@echo ""
 	@echo "    CC_NOT_GCC 'yes'/'no' - If set to 'yes' no gcc specific options will be used (=$(CC_NOT_GCC))"
 	@echo ""
@@ -87,6 +94,7 @@ help:
 	@echo "    PREFIX     - Prefix where library will be installed                             (=$(PREFIX))"
 	@echo "    INCLUDEDIR - Directory where header files will be installed (PREFIX/INCLUDEDIR) (=$(INCLUDEDIR))"
 	@echo "    LIBDIR     - Directory where library will be installed (PREFIX/LIBDIR)          (=$(LIBDIR))"
+	@echo "    MANDIR     - Directory where manpages will be installed (PREFIX/MANDIR)         (=$(MANDIR))"
 	@echo ""
 	@echo "Variables:"
 	@echo "  Note that most of can be preset or changed by user"
