@@ -15,7 +15,7 @@ backup=()
 install=
 source=(http://libccd.danfis.cz/files/$pkgname-$pkgver.tar.gz)
 noextract=()
-md5sums=('b9a73ff93e9f6d72c7aaa72ba996637c')
+md5sums=('a08a403497742760efa8860a21612556')
 
 build() {
     cd ${pkgname}-${pkgver}
