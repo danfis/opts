@@ -16,7 +16,19 @@ echo "--------"
 echo "--------"
 ./test --str "a string" --str2 string2
 
-) >unittest.tmp
+echo "--------"
+./test --str "a string" --iarr 1,2,3
+
+echo "--------"
+./test --str "a string" --iarr 3,4 --larr 123123,456456
+
+echo "--------"
+./test --none --iarr 1,1 --farr 1,3.1,4.e-6 --darr '1;2.;3.1;4E3' --sarr 3
+
+echo "--------"
+./test --iarr 1.1,1 --sarr 3e1
+
+) >unittest.tmp 2>&1
 
 diff unittest.tmp unittest.out
 exit $?

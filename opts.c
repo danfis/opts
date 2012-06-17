@@ -48,7 +48,7 @@ static void optNoArg(opt_t *opt);
 static int optArg(opt_t *opt, const char *arg);
 static void invalidOptErr(const opt_t *opt);
 
-static const char *strend(const char *str);
+static const char *strelend(const char *str);
 
 int optsAdd(const char *long_name, char short_name,
             uint32_t type, void *set, void (*callback)(void))
@@ -232,131 +232,49 @@ static void optNoArg(opt_t *opt)
 
 static void invalidOptErr(const opt_t *opt)
 {
-    if (opt->long_name){
+    if (opt->long_name && opt->short_name){
+        fprintf(stderr, "Invalid argument of -%c/--%s option.\n",
+                (opt)->short_name, (opt)->long_name);
+    }else if (opt->long_name){
         fprintf(stderr, "Invalid argument of --%s option.\n", (opt)->long_name);
-    }else{ \
+    }else{
         fprintf(stderr, "Invalid argument of -%c option.\n", (opt)->short_name);
     }
 }
 
-#define _optArgLong(opt, arg, type) \
-    void (*cb)(const char *, char, type); \
-    long val; \
-    \
-    if (parseLong((arg), strend(arg), &val, NULL) != 0){ \
-        invalidOptErr(opt); \
-        return -1; \
-    } \
-    \
-    if ((opt)->set){ \
-        *(type *)(opt)->set = (type)val; \
-    } \
-    \
-    if ((opt)->callback){ \
-        cb = (void (*)(const char *, char, type))(opt)->callback; \
-        cb((opt)->long_name, (opt)->short_name, (type)val); \
-    } \
-    \
-    return 0
+#define OPTARG_NAME      optArgLong
+#define OPTARG_TYPE      long
+#define OPTARG_BASETYPE  long
+#define OPTARG_PARSEFUNC parseLong
+#include "optarg.c"
 
-static int optArgLong(opt_t *opt, const char *arg)
-{
-    _optArgLong(opt, arg, long);
-}
+#define OPTARG_NAME      optArgInt
+#define OPTARG_TYPE      int
+#define OPTARG_BASETYPE  long
+#define OPTARG_PARSEFUNC parseLong
+#include "optarg.c"
 
-static int optArgInt(opt_t *opt, const char *arg)
-{
-    _optArgLong(opt, arg, int);
-}
+#define OPTARG_NAME      optArgSizeT
+#define OPTARG_TYPE      size_t
+#define OPTARG_BASETYPE  long
+#define OPTARG_PARSEFUNC parseLong
+#include "optarg.c"
 
-static int optArgSizeT(opt_t *opt, const char *arg)
-{
-    _optArgLong(opt, arg, size_t);
-}
 
-#define _optArgDouble(opt, arg, type) \
-    void (*cb)(const char *, char, type); \
-    double val; \
-    \
-    if (parseDouble(arg, strend(arg), &val, NULL) != 0){ \
-        if (opt->long_name){ \
-            fprintf(stderr, "Invalid argument of --%s option.\n", opt->long_name); \
-        }else{ \
-            fprintf(stderr, "Invalid argument of -%c option.\n", opt->short_name); \
-        } \
-        return -1; \
-    } \
-    \
-    if (opt->set){ \
-        *(type *)opt->set = val; \
-    } \
-    \
-    if (opt->callback){ \
-        cb = (void (*)(const char *, char, type))opt->callback; \
-        cb(opt->long_name, opt->short_name, val); \
-    } \
-    \
-    return 0
+#define OPTARG_NAME      optArgFloat
+#define OPTARG_TYPE      float
+#define OPTARG_BASETYPE  double
+#define OPTARG_PARSEFUNC parseDouble
+#include "optarg.c"
 
-static int optArgFloat(opt_t *opt, const char *arg)
-{
-    _optArgDouble(opt, arg, float);
-}
+#define OPTARG_NAME      optArgDouble
+#define OPTARG_TYPE      double
+#define OPTARG_BASETYPE  double
+#define OPTARG_PARSEFUNC parseDouble
+#include "optarg.c"
 
-static int optArgDouble(opt_t *opt, const char *arg)
-{
-    _optArgDouble(opt, arg, double);
-}
 
-#if 0
-static int optArgV2(opt_t *opt, const char *arg)
-{
-    void (*cb)(const char *, char, const fer_vec2_t *);
-    fer_real_t val;
-    fer_vec2_t v2;
-    const char *arg2;
-
-    arg2 = arg;
-    while (*arg2 != 0x0 && *arg2 != ',')
-        ++arg2;
-
-    if (*arg2 != ','){
-        goto optArgV2_err;
-    }
-
-    if (parseReal(arg, arg2, &val, NULL) != 0){
-        goto optArgV2_err;
-    }
-    ferVec2SetX(&v2, val);
-
-    ++arg2;
-    if (parseReal(arg2, strend(arg2), &val, NULL) != 0){
-        goto optArgV2_err;
-    }
-    ferVec2SetY(&v2, val);
-
-    if (opt->set){
-        ferVec2Copy((fer_vec2_t *)opt->set, &v2);
-    }
-
-    if (opt->callback){
-        cb = (void (*)(const char *, char, const fer_vec2_t *))opt->callback;
-        cb(opt->long_name, opt->short_name, &v2);
-    }
-
-    return 0;
-
-optArgV2_err:
-    if (opt->long_name){
-        fprintf(stderr, "Invalid argument of --%s option.\n", opt->long_name);
-    }else{
-        fprintf(stderr, "Invalid argument of -%c option.\n", opt->short_name);
-    }
-    return -1;
-}
-#endif
-
-static int optArgStr(opt_t *opt, const char *arg)
+static int optArgStr(opt_t *opt, const char *arg, int len)
 {
     void (*cb)(const char *, char, const char *);
 
@@ -374,21 +292,24 @@ static int optArgStr(opt_t *opt, const char *arg)
 
 static int optArg(opt_t *opt, const char *arg)
 {
-    switch(opt->type){
+    int type;
+    int len = 0;
+
+    type = opt->type & 0xff;
+    len  = opt->type >> 8;
+    switch(type){
         case OPTS_LONG:
-            return optArgLong(opt, arg);
+            return optArgLong(opt, arg, len);
         case OPTS_INT:
-            return optArgInt(opt, arg);
+            return optArgInt(opt, arg, len);
         case OPTS_FLOAT:
-            return optArgFloat(opt, arg);
+            return optArgFloat(opt, arg, len);
         case OPTS_DOUBLE:
-            return optArgDouble(opt, arg);
+            return optArgDouble(opt, arg, len);
         case OPTS_STR:
-            return optArgStr(opt, arg);
+            return optArgStr(opt, arg, len);
         case OPTS_SIZE_T:
-            return optArgSizeT(opt, arg);
-        //case FER_OPTS_V2:
-        //    return optArgV2(opt, arg);
+            return optArgSizeT(opt, arg, len);
         default:
             return -1;
     }
@@ -396,10 +317,10 @@ static int optArg(opt_t *opt, const char *arg)
     return 0;
 }
 
-static const char *strend(const char *str)
+static const char *strelend(const char *str)
 {
     const char *s = str;
-    while (*s != 0x0)
+    while (*s != 0x0 && *s != ',' && *s != ';')
         ++s;
     return s;
 }
@@ -453,31 +374,45 @@ static void printName(opt_t *opt, size_t len, FILE *out)
 
 static void printType(opt_t *opt, FILE *out)
 {
-    switch(opt->type){
+    int type;
+    int len = 0;
+
+    type = opt->type & 0xff;
+    len  = opt->type >> 8;
+    switch(type){
         case OPTS_NONE:
             fprintf(out, "      ");
             break;
         case OPTS_LONG:
-            fprintf(out, "int   ");
-            break;
         case OPTS_INT:
-            fprintf(out, "int   ");
+            if (len > 0){
+                fprintf(out, "int[]   ");
+            }else{
+                fprintf(out, "int     ");
+            }
             break;
         case OPTS_FLOAT:
-            fprintf(out, "float ");
-            break;
         case OPTS_DOUBLE:
-            fprintf(out, "float ");
+            if (len > 0){
+                fprintf(out, "float[] ");
+            }else{
+                fprintf(out, "float   ");
+            }
             break;
         case OPTS_STR:
-            fprintf(out, "str   ");
+            if (len > 0){
+                fprintf(out, "str[]   ");
+            }else{
+                fprintf(out, "str     ");
+            }
             break;
         case OPTS_SIZE_T:
-            fprintf(out, "uint  ");
+            if (len > 0){
+                fprintf(out, "uint[]  ");
+            }else{
+                fprintf(out, "uint    ");
+            }
             break;
-        //case FER_OPTS_V2:
-        //    fprintf(out, "vec2  ");
-        //    break;
     }
 }
 

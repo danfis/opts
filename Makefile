@@ -21,7 +21,7 @@ CFLAGS += -I.
 LDFLAGS += -L. -lopts -lm
 
 TARGETS  = libopts.a
-TARGETS += test
+TARGETS += test test2
 OBJS  = opts.o
 
 
@@ -34,6 +34,12 @@ libopts.a: $(OBJS)
 test: test.c libopts.a
 	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)
 	@if ! $(SH) unittest.sh; then echo "Unit test FAILED."; exit -1; fi
+test2: test2.c libopts.a
+	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)
+#./test2 -o 2.2 -h -a 2,3.1,11
+
+opts.c: parse.c optarg.c
+	touch opts.c
 
 %.o: %.c %.h
 	$(CC) $(CFLAGS) -c -o $@ $<
