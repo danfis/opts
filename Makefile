@@ -57,11 +57,6 @@ clean:
 	rm -f $(TARGETS)
 	if [ -d testsuites ]; then $(MAKE) -C testsuites clean; fi;
 	if [ -d doc ]; then $(MAKE) -C doc clean; fi;
-	
-check:
-	$(MAKE) -C testsuites check
-check-valgrind:
-	$(MAKE) -C testsuites check-valgrind
 
 doc:
 	$(MAKE) -C doc
@@ -71,23 +66,15 @@ analyze: clean
 
 help:
 	@echo "Targets:"
-	@echo "    all            - Build library"
-	@echo "    doc            - Build documentation"
-	@echo "    check          - Build & Run automated tests"
-	@echo "    check-valgrind - Build & Run automated tests in valgrind(1)"
-	@echo "    clean          - Remove all generated files"
-	@echo "    install        - Install library into system"
-	@echo "    analyze        - Performs static analysis using Clang Static Analyzer"
+	@echo "    all        - Build library"
+	@echo "    doc        - Build documentation"
+	@echo "    clean      - Remove all generated files"
+	@echo "    install    - Install library into system"
+	@echo "    analyze    - Performs static analysis using Clang Static Analyzer"
 	@echo ""
-	@echo "    fermat-cd      - Separate FermatCD library into tarball. See FERMAT_CD_VER option."
 	@echo "Options:"
 	@echo "    CC         - Path to C compiler          (=$(CC))"
-	@echo "    CXX        - Path to C++ compiler        (=$(CXX))"
-	@echo "    M4         - Path to m4 macro processor  (=$(M4))"
-	@echo "    SED        - Path to sed(1)              (=$(SED))"
-	@echo "    PYTHON     - Path to python interpret    (=$(PYTHON))"
-	@echo "    PYTHON2    - Path to python interpret v2 (=$(PYTHON2))"
-	@echo "    PYTHON3    - Path to python interpret v3 (=$(PYTHON3))"
+	@echo "    SH         - Path to sh(1)               (=$(SH))"
 	@echo "    SCAN_BUILD - Path to scan-build          (=$(SCAN_BUILD))"
 	@echo ""
 	@echo "    CC_NOT_GCC 'yes'/'no' - If set to 'yes' no gcc specific options will be used (=$(CC_NOT_GCC))"
