@@ -85,7 +85,7 @@ int optsAddDesc(const char *long_name, char short_name,
                 uint32_t type, void *set, void (*callback)(void),
                 const char *desc)
 {
-    size_t id, desclen;
+    int id, desclen;
     opt_t *opt;
    
     id = optsAdd(long_name, short_name, type, set, callback);
@@ -421,7 +421,7 @@ static void printDesc(opt_t *opt, FILE *out)
     if (!opt->desc)
         return;
 
-    fprintf(out, opt->desc);
+    fprintf(out, "%s", opt->desc);
 }
 
 void optsPrint(FILE *out, const char *lineprefix)
