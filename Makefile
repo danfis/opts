@@ -50,9 +50,9 @@ install: libopts.a doc
 	mkdir -p $(PREFIX)/$(INCLUDEDIR)
 	mkdir -p $(PREFIX)/$(LIBDIR)
 	mkdir -p $(PREFIX)/$(MANDIR)
-	cp -r opts.h $(PREFIX)/$(INCLUDEDIR)
+	cp opts.h $(PREFIX)/$(INCLUDEDIR)
 	cp libopts.a $(PREFIX)/$(LIBDIR)
-	cp *.3.gz $(PREFIX)/$(MANDIR)
+	cp opts.3 $(PREFIX)/$(MANDIR)
 
 clean:
 	rm -f $(OBJS)
@@ -61,10 +61,10 @@ clean:
 	if [ -d testsuites ]; then $(MAKE) -C testsuites clean; fi;
 	if [ -d doc ]; then $(MAKE) -C doc clean; fi;
 
-doc:
-	rm -f *.3 *.3.gz
-	a2x -d manpage -f manpage opts.3.txt
-	for file in *.3; do $(GZIP) $$file; done;
+doc: opts.3
+
+opts.3: opts.3.txt
+	a2x -d manpage -f manpage $<
 
 html-doc:
 	asciidoc -d manpage -b html5 -s -f man-html.conf opts.3.txt

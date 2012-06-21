@@ -77,6 +77,6 @@ LDFLAGS += $(SYSTEM_LDFLAGS)
 PREFIX     ?= /usr/local
 INCLUDEDIR ?= include
 LIBDIR     ?= lib
-MANDIR     ?= man
+MANDIR     ?= man/man3
 
 .DEFAULT_GOAL := all
