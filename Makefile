@@ -66,6 +66,9 @@ doc:
 	a2x -d manpage -f manpage opts.3.txt
 	for file in *.3; do $(GZIP) $$file; done;
 
+html-doc:
+	asciidoc -d manpage -b html5 -s -f man-html.conf opts.3.txt
+
 analyze: clean
 	$(SCAN_BUILD) $(MAKE)
 
