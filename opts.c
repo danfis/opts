@@ -326,23 +326,28 @@ static const char *strelend(const char *str)
 }
 
 
-/** Returns maximal length of name parts */
-static size_t optsNameLen(void)
+/** Returns maximal length of name parts and 0/1 via {has_short} whether
+ *  any short option is specified. */
+static size_t optsNameLen(int *has_short)
 {
     size_t i, len, name_len;
+
+    *has_short = 0;
+    for (i = 0; i < opts_len; i++){
+        if (opts_arr[i]->short_name){
+            *has_short = 1;
+            break;
+        }
+    }
 
     name_len = 0;
     for (i = 0; i < opts_len; i++){
         len = 0;
-        if (opts_arr[i]->long_name && opts_arr[i]->short_name){
-            // e.g., "-h / --help"
-            len = 7; // "-h / --"
+
+        if (opts_arr[i]->long_name){
+            len = (*has_short ? 7 : 2);
             len += strlen(opts_arr[i]->long_name);
-        }else if (opts_arr[i]->long_name){
-            // e.g., --help
-            len = 2 + strlen(opts_arr[i]->long_name);
-        }else if (opts_arr[i]->short_name){
-            // e.g., -h
+        }else{
             len = 2;
         }
 
@@ -353,12 +358,15 @@ static size_t optsNameLen(void)
     return name_len;
 }
 
-static void printName(opt_t *opt, size_t len, FILE *out)
+static void printName(opt_t *opt, size_t len, int has_short, FILE *out)
 {
     size_t l = 0;
 
     if (opt->short_name){
         fprintf(out, "-%c / ", opt->short_name);
+        l = 5;
+    }else if (has_short){
+        fprintf(out, "     ");
         l = 5;
     }
 
@@ -381,36 +389,36 @@ static void printType(opt_t *opt, FILE *out)
     len  = opt->type >> 8;
     switch(type){
         case OPTS_NONE:
-            fprintf(out, "      ");
+            fprintf(out, "       ");
             break;
         case OPTS_LONG:
         case OPTS_INT:
             if (len > 0){
-                fprintf(out, "int[]   ");
+                fprintf(out, "int[]  ");
             }else{
-                fprintf(out, "int     ");
+                fprintf(out, "int    ");
             }
             break;
         case OPTS_FLOAT:
         case OPTS_DOUBLE:
             if (len > 0){
-                fprintf(out, "float[] ");
+                fprintf(out, "float[]");
             }else{
-                fprintf(out, "float   ");
+                fprintf(out, "float  ");
             }
             break;
         case OPTS_STR:
             if (len > 0){
-                fprintf(out, "str[]   ");
+                fprintf(out, "str[]  ");
             }else{
-                fprintf(out, "str     ");
+                fprintf(out, "str    ");
             }
             break;
         case OPTS_SIZE_T:
             if (len > 0){
-                fprintf(out, "uint[]  ");
+                fprintf(out, "uint[] ");
             }else{
-                fprintf(out, "uint    ");
+                fprintf(out, "uint   ");
             }
             break;
     }
@@ -428,8 +436,9 @@ void optsPrint(FILE *out, const char *lineprefix)
 {
     size_t i;
     size_t name_len;
+    int has_short;
 
-    name_len = optsNameLen();
+    name_len = optsNameLen(&has_short);
 
     // print option descriptions
     for (i = 0; i < opts_len; i++){
@@ -437,7 +446,7 @@ void optsPrint(FILE *out, const char *lineprefix)
         fprintf(out, "%s", lineprefix);
 
         // then print name
-        printName(opts_arr[i], name_len, out);
+        printName(opts_arr[i], name_len, has_short, out);
         fprintf(out, "  ");
 
         // print type
