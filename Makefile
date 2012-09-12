@@ -72,6 +72,12 @@ html-doc:
 analyze: clean
 	$(SCAN_BUILD) $(MAKE)
 
+
+deb:
+	$(PYTHON) debian/make-changelog.py <CHANGELOG >debian/changelog
+	cp BSD-LICENSE debian/copyright
+	debuild -us -uc
+
 help:
 	@echo "Targets:"
 	@echo "    all        - Build library"
