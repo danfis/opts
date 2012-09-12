@@ -1,9 +1,9 @@
 ###
-# fermat
-# -------
-# Copyright (c)2011 Daniel Fiser <danfis@danfis.cz>
+# opts
+# -----
+# Copyright (c)2010-2012 Daniel Fiser <danfis@danfis.cz>
 #
-#  This file is part of fermat.
+#  This file is part of opts.
 #
 #  Distributed under the OSI-approved BSD License (the "License");
 #  see accompanying file BDS-LICENSE for details or see
@@ -13,6 +13,7 @@
 #  implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 #  See the License for more information.
 ##
+###
 
 ###
 # Template Makefile variable definition file.
