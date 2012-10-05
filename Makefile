@@ -65,6 +65,10 @@ doc: opts.3
 
 opts.3: opts.3.txt
 	a2x -d manpage -f manpage $<
+	if [ -f opts,_optsAdd,_optsAddDesc,_optsClear,_optsPrint.3 ] \
+        && [ ! -f opts.3 ]; then \
+            mv opts,_optsAdd,_optsAddDesc,_optsClear,_optsPrint.3 opts.3; \
+    fi;
 
 html-doc:
 	asciidoc -d manpage -b html5 -s -f man-html.conf opts.3.txt
