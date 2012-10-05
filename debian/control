@@ -3,7 +3,7 @@ Maintainer: Daniel Fiser <danfis@danfis.cz>
 Section: misc
 Priority: optional
 Standards-Version: 3.9.2
-Build-Depends: debhelper (>= 8), asciidoc
+Build-Depends: debhelper (>= 7), asciidoc
 
 Package: opts
 Architecture: any
