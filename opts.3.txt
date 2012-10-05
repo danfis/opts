@@ -159,6 +159,11 @@ SEE ALSO
 opts(3), optsAdd(3), optsAddDesc(3), optsClear(3), optsPrint(3)
 
 
+AUTHOR
+------
+Daniel Fiser <danfis@danfis.cz>.
+
+
 COPYING
 -------
 Copyright \(C) 2012 Daniel Fiser <danfis@danfis.cz>.
